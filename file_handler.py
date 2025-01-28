@@ -6,16 +6,20 @@ import settings
 
 def read_file(file_path):
     with open(file_path, mode="r", encoding="utf-8") as f:
-        return f.read()
+        file_content = f.read()
+    logger.debug(f"Read {len(file_content)} bytes from {file_path}")
+    return file_content
 
 
 def init_result_file(output_dir, output_file_name, path_to_check, timestamp):
-    with open(output_dir / output_file_name, "w") as f:
+    path_and_file = output_dir / output_file_name
+    with open(path_and_file, "w") as f:
         f.write(f"Review of {path_to_check}\n")
         f.write(f"Timestamp: {timestamp}\n")
         f.write(f"System prompt {settings.system_prompt}\n")
         f.write("------------------------------------\n")
         logger.info(f"Initialized {output_dir / output_file_name}")
+        return path_and_file
 
 
 def write_rewiev_result(output_dir, output_file_name, result, file_path):
@@ -25,15 +29,21 @@ def write_rewiev_result(output_dir, output_file_name, result, file_path):
         f.write("\n---------------------------\n\n")
 
 
+def get_file_suffix(file) -> str:
+    file_path = Path(file)
+    extension = file_path.suffix
+    return extension
+
+
 def get_files_to_check(directory_path):
     file_paths = []
     current_dir = os.path.join(os.getcwd(), directory_path)
     """Walk through all directories recursively and find files matching the desired suffix"""
     for root, dirs, files in os.walk(current_dir):
-        if "venv" in root:
+        if "venv" in root or root.startswith("."):
             continue
         for file in files:
-            if file.endswith(settings.file_suffix) and not file.startswith("_"):
+            if Path(file).suffix in settings.file_suffixes and not file.startswith("_"):
                 file_path = os.path.join(root, file)
                 file_paths.append(file_path)
     logger.info(f"Found {len(file_paths)} matching files")
@@ -48,6 +58,7 @@ def create_review_results_dir(path_to_check, date_str):
 
     date_dir = Path(f"{product_dir}/{date_str}")
     date_dir.mkdir(parents=True, exist_ok=True)
+    logger.debug(f"Created directory for report: {date_dir}")
     return date_dir
 
 

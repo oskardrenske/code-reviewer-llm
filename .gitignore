@@ -11,3 +11,5 @@ wheels/
 .env
 
 reviews/
+
+.DS_Store
