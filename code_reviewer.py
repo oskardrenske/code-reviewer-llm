@@ -74,4 +74,4 @@ class CodeReviewer:
             content = chunk["message"]["content"]
             response.append(content)
             print(content, end="", flush=True)
-        return response
+        return "".join(map(str, response))
