@@ -20,12 +20,20 @@ class CodeReviewer:
             self.timestamp,
         )
         self.file = None
+        self.system_prompt = {
+            "role": "system",
+            "content": settings.system_prompt,
+        }
         logger.info("Setup complete")
 
     def start_review(self):
         for file in self.files_to_check:
             self.file = file
-            review = self.llm(file_handler.read_file(file))
+            file_content = file_handler.read_file(file)
+            if settings.stream:
+                review = self.llm_stream(file_content)
+            else:
+                review = self.llm(file_content)
             file_handler.write_rewiev_result(
                 self.result_dir, settings.review_file_name, review, file
             )
@@ -35,10 +43,7 @@ class CodeReviewer:
             ollama_response = ollama.chat(
                 model=settings.llm_model,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": settings.system_prompt,
-                    },
+                    self.system_prompt,
                     {
                         "role": "user",
                         "content": f"{settings.user_prompt} {file_content}",
@@ -50,3 +55,23 @@ class CodeReviewer:
         except Exception as e:
             logger.error(e)
             return f"Error when reviewing {self.file}: {e}"
+
+    def llm_stream(self, file_content):
+        response = []
+        ollama_response = ollama.chat(
+            model=settings.llm_model,
+            stream=True,
+            messages=[
+                self.system_prompt,
+                {
+                    "role": "user",
+                    "content": f"Review the following Python code: {file_content}",
+                },
+            ],
+        )
+
+        for chunk in ollama_response:
+            content = chunk["message"]["content"]
+            response.append(content)
+            print(content, end="", flush=True)
+        return response

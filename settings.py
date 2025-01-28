@@ -4,13 +4,14 @@ from loguru import logger
 from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
-
+# Environment variables
 llm_model = os.getenv("LLM_MODEL", None)
 file_suffix_env_var = os.getenv("FILE_SUFFIX", ".py, .md")
 file_suffixes = [ft.strip() for ft in file_suffix_env_var.split(",")]
 programming_language = os.getenv("PROG_LANG", "python")
 path_to_check = os.getenv("PATH_TO_CHECK", None)
 tone = os.getenv("TONE", "neutral")
+stream = os.getenv("STREAM", "true").lower().strip() == "true"
 
 
 system_prompt = f"You are a {programming_language} expert specialized in code reviews."
